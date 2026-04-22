@@ -24,7 +24,9 @@ import {
   buildProfileImageSrc,
   formatCurrency,
 } from '../data/portalData';
+import { PORTAL_IMAGES } from '../data/siteImages';
 import { getInitials, getLocalTimeLabel, getTimeGreeting } from '../utils/display';
+import CampusCarousel from './CampusCarousel';
 import HighlightText from './HighlightText';
 import DashboardSidebar from './DashboardSidebar';
 import Settings from './Settings';
@@ -394,6 +396,16 @@ const Dashboard = ({
         </div>
       </header>
 
+      <section className="dashboard-campuses">
+        <CampusCarousel
+          slides={PORTAL_IMAGES}
+          title="Campus highlights"
+          description="A rotating visual tour of the same UR and RP images used on the landing page."
+          variant="compact"
+          className="dashboard-campus-carousel"
+        />
+      </section>
+
       <div className="dashboard-layout-with-sidebar">
         <DashboardSidebar 
           activeView={activeView} 
@@ -658,10 +670,6 @@ const Dashboard = ({
             user={student}
             userType="student"
             onUpdateProfile={onUpdateProfile}
-            onProfileImageUpload={onProfileImageUpload}
-            onUpdateTheme={async () => {
-              return { success: true, message: 'Theme updated successfully' };
-            }}
           />
         ) : (
           <>

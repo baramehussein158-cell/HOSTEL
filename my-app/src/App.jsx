@@ -10,7 +10,6 @@ import {
   ADMIN_ACCOUNT,
   HOSTEL_RENT_BY_ROOM_TYPE,
   STORAGE_KEYS,
-  buildProfileImageSrc,
   createId,
   getUserAccountKey,
   getUserRecencyScore,
@@ -34,10 +33,7 @@ import {
   updateRoom,
   updatePasswordResetRequest,
   updateUserProfileForUsers,
-  updateUserProfileImage,
-  updateUserProfileImageForUsers,
   updateUserPasswordForUsers,
-  uploadProfileImage,
 } from './services/portalRepository';
 import sessionManager from './utils/sessionManager';
 import './App.scss';
@@ -1177,88 +1173,6 @@ function AppContent() {
     }
   };
 
-  const handleProfileImageUpload = async (profileImageFile) => {
-    if (!activeStudent) {
-      return { success: false, message: 'Student session not found.' };
-    }
-
-    try {
-      const accountKey = getUserAccountKey(activeStudent);
-      const relatedUserIds = users
-        .filter((user) => getUserAccountKey(user) === accountKey)
-        .map((user) => user.id);
-      const profileImage = await uploadProfileImage(activeStudent.id, profileImageFile);
-
-      await (
-        relatedUserIds.length > 1
-          ? updateUserProfileImageForUsers(relatedUserIds, profileImage)
-          : updateUserProfileImage(activeStudent.id, profileImage)
-      );
-
-      setUsers((currentUsers) =>
-        currentUsers.map((user) =>
-          getUserAccountKey(user) === accountKey
-            ? {
-                ...user,
-                profileImageUrl: profileImage.url,
-                profileImagePath: profileImage.path,
-                profileImageUpdatedAt: profileImage.updatedAt,
-              }
-            : user
-        )
-      );
-
-      return {
-        success: true,
-        url: buildProfileImageSrc(profileImage.url, profileImage.updatedAt),
-        profileImageUrl: profileImage.url,
-        profileImageUpdatedAt: profileImage.updatedAt,
-      };
-    } catch (error) {
-      console.error('Failed to upload profile image:', error);
-      return {
-        success: false,
-        message: error.message || 'Failed to upload the profile image to Database Storage. Check your storage rules.',
-      };
-    }
-  };
-
-  const handleAdminProfileImageUpload = async (profileImageFile) => {
-    if (!profileImageFile) {
-      return { success: false, message: 'Choose a profile image first.' };
-    }
-
-    try {
-      const profileImage = await uploadProfileImage('admin-profile', profileImageFile);
-
-      setSession((currentSession) => {
-        if (currentSession?.role !== 'admin') {
-          return currentSession;
-        }
-
-        return {
-          ...currentSession,
-          profileImageUrl: profileImage.url,
-          profileImagePath: profileImage.path,
-          profileImageUpdatedAt: profileImage.updatedAt,
-        };
-      });
-
-      return {
-        success: true,
-        url: buildProfileImageSrc(profileImage.url, profileImage.updatedAt),
-        profileImageUrl: profileImage.url,
-        profileImageUpdatedAt: profileImage.updatedAt,
-      };
-    } catch (error) {
-      console.error('Failed to upload admin profile image:', error);
-      return {
-        success: false,
-        message: error.message || 'Failed to upload the admin profile image. Check your storage rules.',
-      };
-    }
-  };
-
   const handlePortalSelect = (portal) => {
     setSelectedPortal(portal);
     localStorage.setItem('selected-portal', JSON.stringify(portal));
@@ -1344,7 +1258,6 @@ function AppContent() {
             studentApplications={studentApplications}
             latestPasswordResetRequest={latestPasswordResetRequest}
             onRoomApplication={handleRoomApplication}
-            onProfileImageUpload={handleProfileImageUpload}
             onUpdateProfile={handleUpdateActiveStudentProfile}
           />
         ) : (
@@ -1394,7 +1307,6 @@ function AppContent() {
             onDeleteStudent={handleDeleteStudent}
             onReviewPasswordResetRequest={handlePasswordResetReview}
             onUpdateAdminProfile={handleUpdateAdminProfile}
-            onUpdateAdminProfileImage={handleAdminProfileImageUpload}
           />
         ) : (
           <Login

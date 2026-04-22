@@ -27,10 +27,23 @@ import {
 } from '../data/portalData';
 import { PORTAL_IMAGES } from '../data/siteImages';
 import { getInitials, getLocalTimeLabel, getTimeGreeting } from '../utils/display';
+import CampusCarousel from './CampusCarousel';
 import HighlightText from './HighlightText';
 import DashboardSidebar from './DashboardSidebar';
 import Settings from './Settings';
 import './AdminPortal.scss';
+
+const normalizeText = (value) => String(value ?? '').trim().toLowerCase();
+
+const matchesCampusFilter = (value, campusFilter) => campusFilter === 'ALL' || String(value ?? '').toUpperCase() === campusFilter;
+
+const matchesQuery = (values, query) => {
+  if (!query) {
+    return true;
+  }
+
+  return values.some((value) => normalizeText(value).includes(query));
+};
 
 const AdminPortal = ({
   onLogout,
@@ -46,18 +59,15 @@ const AdminPortal = ({
   onDeleteStudent,
   onReviewPasswordResetRequest,
   onUpdateAdminProfile,
-  onUpdateAdminProfileImage,
   adminProfile,
   session,
 }) => {
   const { theme, changeTheme } = useTheme();
   const [activeView, setActiveView] = useState('overview');
   const [passwordDrafts, setPasswordDrafts] = useState({});
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [campusFilter, setCampusFilter] = useState('ALL');
-  const [studentCampusFilter, setStudentCampusFilter] = useState('ALL');
   const [studentSearch, setStudentSearch] = useState('');
   const [flash, setFlash] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -69,6 +79,9 @@ const AdminPortal = ({
   );
   const timeGreeting = getTimeGreeting();
   const currentTimeLabel = getLocalTimeLabel();
+  const searchQuery = studentSearch.trim().toLowerCase();
+  const selectedCampusLabel =
+    campusFilter === 'UR' ? 'University of Rwanda' : campusFilter === 'RP' ? 'Rwanda Polytechnic' : 'All campuses';
 
   const roomDrafts = useMemo(() =>
     roomInventory.reduce((drafts, room) => {
@@ -118,48 +131,111 @@ const AdminPortal = ({
     return () => clearTimeout(timer);
   }, [flash]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
+  const campusScopedRooms = useMemo(
+    () => roomInventory.filter((room) => matchesCampusFilter(room.campus, campusFilter)),
+    [roomInventory, campusFilter]
+  );
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return undefined;
-    }
+  const campusScopedApplications = useMemo(
+    () => applications.filter((application) => matchesCampusFilter(application.campus, campusFilter)),
+    [applications, campusFilter]
+  );
 
-    const interval = window.setInterval(() => {
-      setActiveImageIndex((currentIndex) => (currentIndex + 1) % PORTAL_IMAGES.length);
-    }, 4000);
+  const campusScopedStudents = useMemo(
+    () => registeredUsers.filter((user) => matchesCampusFilter(user.campus, campusFilter)),
+    [registeredUsers, campusFilter]
+  );
 
-    return () => window.clearInterval(interval);
-  }, []);
+  const campusScopedPasswordResetRequests = useMemo(
+    () => passwordResetRequests.filter((request) => matchesCampusFilter(request.campus, campusFilter)),
+    [passwordResetRequests, campusFilter]
+  );
 
-  const totalRooms = roomInventory.reduce((sum, room) => sum + room.total, 0);
-  const approvedApplications = applications.filter((application) => application.status === 'approved');
-  const verifiedPayments = applications.filter((application) => application.paymentStatus === 'verified');
-  const pendingPasswordResetRequests = passwordResetRequests.filter(
+  const filteredRoomInventory = useMemo(
+    () =>
+      campusScopedRooms.filter((room) =>
+        matchesQuery([room.campus, room.label, room.typeKey, room.status, room.total], searchQuery)
+      ),
+    [campusScopedRooms, searchQuery]
+  );
+
+  const filteredApplications = useMemo(
+    () =>
+      campusScopedApplications
+        .filter((application) => statusFilter === 'ALL' || application.status === statusFilter)
+        .filter((application) =>
+          matchesQuery(
+            [
+              application.name,
+              application.email,
+              application.regNumber,
+              application.campus,
+              application.studyCampus,
+              application.roomType,
+              application.status,
+              application.paymentStatus,
+              application.paymentMethod,
+              application.paymentReference,
+              application.assignedRoom,
+              application.phone,
+              application.paymentVerificationNotes,
+              application.amountPaid,
+              application.expectedRentAmount,
+            ],
+            searchQuery
+          )
+        ),
+    [campusScopedApplications, statusFilter, searchQuery]
+  );
+
+  const filteredStudents = useMemo(
+    () =>
+      campusScopedStudents.filter((user) =>
+        matchesQuery(
+          [user.name, user.email, user.regNumber, user.campus, user.gender, user.phone, user.allowAdminUpdates ? 'allowed' : 'not allowed'],
+          searchQuery
+        )
+      ),
+    [campusScopedStudents, searchQuery]
+  );
+
+  const filteredPasswordResetRequests = useMemo(
+    () =>
+      campusScopedPasswordResetRequests.filter((request) =>
+        matchesQuery(
+          [request.name, request.email, request.regNumber, request.campus, request.gender, request.reason, request.status, request.resetCode],
+          searchQuery
+        )
+      ),
+    [campusScopedPasswordResetRequests, searchQuery]
+  );
+
+  const totalRooms = campusScopedRooms.reduce((sum, room) => sum + room.total, 0);
+  const approvedApplications = campusScopedApplications.filter((application) => application.status === 'approved');
+  const verifiedPayments = campusScopedApplications.filter((application) => application.paymentStatus === 'verified');
+  const pendingPasswordResetRequests = campusScopedPasswordResetRequests.filter(
     (request) => request.status === 'pending'
   ).length;
   const approvedAllocations = useMemo(
-    () => sortApplicationsByDate(approvedApplications),
-    [approvedApplications]
+    () => sortApplicationsByDate(filteredApplications.filter((application) => application.status === 'approved')),
+    [filteredApplications]
   );
-  const pendingApplications = applications.filter((application) => application.status === 'pending').length;
-  const pendingPaymentReviews = applications.filter(
+  const pendingApplications = campusScopedApplications.filter((application) => application.status === 'pending').length;
+  const pendingPaymentReviews = campusScopedApplications.filter(
     (application) => (application.paymentStatus ?? 'pending') === 'pending'
   ).length;
   const occupancyRate = totalRooms > 0 ? Math.round((approvedApplications.length / totalRooms) * 100) : 0;
-  const openRoomGroups = roomInventory.filter((room) => room.status === 'open').length;
-  
+  const openRoomGroups = campusScopedRooms.filter((room) => room.status === 'open').length;
+
   // Sidebar stats
   const sidebarStats = {
-    totalStudents: registeredUsers.length,
-    totalApplications: applications.length,
+    totalStudents: campusScopedStudents.length,
+    totalApplications: campusScopedApplications.length,
     pendingApplications,
     pendingPaymentReviews,
     approvedApplications: approvedApplications.length,
     totalRooms,
-    waitlistedApplications: applications.filter((app) => app.status === 'waitlisted').length,
+    waitlistedApplications: campusScopedApplications.filter((app) => app.status === 'waitlisted').length,
     pendingPasswordResets: pendingPasswordResetRequests,
   };
 
@@ -201,32 +277,9 @@ const AdminPortal = ({
     };
   });
 
-  const filteredApplications = applications.filter((application) => {
-    const campusMatches = campusFilter === 'ALL' || application.campus === campusFilter;
-    const statusMatches = statusFilter === 'ALL' || application.status === statusFilter;
-    return campusMatches && statusMatches;
-  });
-
-  const filteredStudents = useMemo(() => {
-    const searchTerm = studentSearch.trim().toLowerCase();
-
-    return registeredUsers.filter((user) => {
-      const campusMatches = studentCampusFilter === 'ALL' || user.campus === studentCampusFilter;
-      if (!campusMatches) {
-        return false;
-      }
-
-      if (!searchTerm) {
-        return true;
-      }
-
-      return [user.name, user.email, user.regNumber, user.gender].some((value) =>
-        String(value ?? '')
-          .toLowerCase()
-          .includes(searchTerm)
-      );
-    });
-  }, [registeredUsers, studentCampusFilter, studentSearch]);
+  const visibleCampusSummaries = campusFilter === 'ALL'
+    ? campusSummaries
+    : campusSummaries.filter((summary) => summary.campus === campusFilter);
 
   const getLatestApplicationForStudent = React.useCallback((user) => {
     const accountKey = getUserAccountKey(user);
@@ -253,8 +306,7 @@ const AdminPortal = ({
   }, [applications]);
 
   const adminSearchResults = useMemo(() => {
-    const query = studentSearch.trim().toLowerCase();
-    if (!query) {
+    if (!searchQuery) {
       return [];
     }
 
@@ -262,11 +314,19 @@ const AdminPortal = ({
       {
         id: 'overview',
         title: 'Overview',
-        description: `${registeredUsers.length} registered students, ${applications.length} applications`,
+        description: `${campusScopedStudents.length} registered students, ${campusScopedApplications.length} applications`,
         detail: `${pendingApplications} pending applications`,
         keywords: ['overview', 'summary', 'students', 'applications', 'payments', 'rooms'].join(' '),
         onClick: () => setActiveView('overview'),
       },
+      ...visibleCampusSummaries.map((summary) => ({
+        id: `campus-${summary.campus}`,
+        title: `${summary.campus} campus`,
+        description: `${summary.totalRooms} total rooms, ${summary.availableRooms} available`,
+        detail: `${summary.waitingApplications} waiting application(s)`,
+        keywords: [summary.campus, 'campus', 'rooms', 'applications', 'payments'].join(' '),
+        onClick: () => setActiveView('overview'),
+      })),
       {
         id: 'payment-review',
         title: 'Payment Review',
@@ -293,6 +353,22 @@ const AdminPortal = ({
           .filter(Boolean)
           .join(' '),
         onClick: () => setActiveView('students'),
+      },
+      {
+        id: 'applications',
+        title: 'Applications',
+        description: `${filteredApplications.length} application(s) matching filters`,
+        detail: 'Open the application workflow',
+        keywords: ['applications', 'students', 'payments', 'rooms', 'status', 'verify'].join(' '),
+        onClick: () => setActiveView('applications'),
+      },
+      {
+        id: 'rooms',
+        title: 'Room Inventory',
+        description: `${filteredRoomInventory.length} room(s) matching filters`,
+        detail: 'Open the room management panel',
+        keywords: ['rooms', 'room', 'inventory', 'capacity', 'hostel'].join(' '),
+        onClick: () => setActiveView('rooms'),
       },
       {
         id: 'settings',
@@ -329,18 +405,61 @@ const AdminPortal = ({
           },
         };
       }),
+      ...filteredApplications.slice(0, 12).map((application) => ({
+        id: `application-${application.id}`,
+        title: application.name,
+        description: `${application.regNumber} | ${application.campus} | ${ROOM_TYPE_LABELS[application.roomType] || application.roomType}`,
+        detail: `${APPLICATION_STATUS_LABELS[application.status]} | ${PAYMENT_STATUS_LABELS[application.paymentStatus ?? 'pending']}`,
+        keywords: [
+          application.email,
+          application.phone,
+          application.studyCampus,
+          application.paymentReference,
+          application.assignedRoom,
+          application.paymentMethod,
+          application.paymentVerificationNotes,
+          application.campus,
+          application.roomType,
+          application.status,
+        ]
+          .filter(Boolean)
+          .join(' '),
+        onClick: () => setActiveView('applications'),
+      })),
+      ...filteredRoomInventory.slice(0, 12).map((room) => ({
+        id: `room-${room.id}`,
+        title: `${room.campus} ${room.label}`,
+        description: `${room.total} room(s) | ${room.status}`,
+        detail: `${getOccupiedCountForRoom(room)} occupied`,
+        keywords: [room.campus, room.label, room.typeKey, room.status, room.total].join(' '),
+        onClick: () => setActiveView('rooms'),
+      })),
+      ...filteredPasswordResetRequests.slice(0, 12).map((request) => ({
+        id: `reset-${request.id}`,
+        title: request.name,
+        description: `${request.regNumber} | ${request.campus}`,
+        detail: PASSWORD_RESET_REQUEST_STATUS_LABELS[request.status] || 'Pending',
+        keywords: [request.email, request.gender, request.reason, request.status, request.resetCode].filter(Boolean).join(' '),
+        onClick: () => setActiveView('password-reset'),
+      })),
     ];
 
-    return index.filter((item) => `${item.title} ${item.description} ${item.detail} ${item.keywords}`.toLowerCase().includes(query));
+    return index.filter((item) =>
+      normalizeText(`${item.title} ${item.description} ${item.detail} ${item.keywords}`).includes(searchQuery)
+    );
   }, [
-    studentSearch,
-    registeredUsers.length,
-    applications.length,
+    searchQuery,
+    campusScopedStudents.length,
+    campusScopedApplications.length,
     pendingApplications,
     pendingPaymentReviews,
     verifiedPayments.length,
     pendingPasswordResetRequests,
+    visibleCampusSummaries,
     filteredStudents,
+    filteredApplications,
+    filteredRoomInventory,
+    filteredPasswordResetRequests,
     getLatestApplicationForStudent,
   ]);
 
@@ -517,12 +636,21 @@ const AdminPortal = ({
               type="search"
               value={studentSearch}
               onChange={(event) => setStudentSearch(event.target.value)}
-              placeholder="Search..."
-              aria-label="Search admin dashboard"
+              placeholder="Search students, rooms, payments..."
+              aria-label="Search students, rooms, payments, and more"
             />
           </label>
 
           <div className="admin-toolbar-actions">
+            <label className="admin-campus-filter">
+              <span>Campus</span>
+              <select value={campusFilter} onChange={(event) => setCampusFilter(event.target.value)}>
+                <option value="ALL">All campuses</option>
+                <option value="UR">UR</option>
+                <option value="RP">RP</option>
+              </select>
+            </label>
+
             <button
               className="theme-toggle"
               onClick={() => changeTheme(theme === 'light' ? 'dark' : 'light')}
@@ -555,7 +683,9 @@ const AdminPortal = ({
               Monitor registrations, verify hostel rent payments, approve qualified students, and support account
               recovery from one place.
             </p>
-            <p className="time-note">Local time: {currentTimeLabel}</p>
+            <p className="time-note">
+              Local time: {currentTimeLabel} | Campus scope: {selectedCampusLabel}
+            </p>
           </div>
         </div>
       </header>
@@ -576,13 +706,17 @@ const AdminPortal = ({
             <div className="section-heading">
               <div>
                 <p className="eyebrow">Search results</p>
-                <h2>Matches for "{studentSearch.trim()}"</h2>
+                <h2>
+                  Matches for "{studentSearch.trim()}" in {selectedCampusLabel}
+                </h2>
               </div>
               <span className="search-results-count">{adminSearchResults.length} result(s)</span>
             </div>
 
             {adminSearchResults.length === 0 ? (
-              <div className="empty-state">No admin matches found. Try a student's name, email, room, payment, or reset.</div>
+              <div className="empty-state">
+                No admin matches found. Try a student's name, email, room, payment, campus, or reset.
+              </div>
             ) : (
               <div className="search-results-grid">
                 {adminSearchResults.map((result) => (
@@ -683,7 +817,7 @@ const AdminPortal = ({
         {activeView === 'overview' && (
           <>
       <section className="admin-campus-strip" aria-label="Campus room summary">
-        {campusSummaries.map((summary) => (
+        {visibleCampusSummaries.map((summary) => (
           <article key={summary.campus} className="admin-campus-card">
             <div className="admin-campus-card-head">
               <div>
@@ -729,34 +863,11 @@ const AdminPortal = ({
           <FaChartBar className="section-icon" />
         </div>
 
-        <div className="admin-image-carousel">
-          <div className="admin-image-frame">
-            <div
-              className="admin-image-track"
-              style={{ transform: `translate3d(-${activeImageIndex * 100}%, 0, 0)` }}
-            >
-              {PORTAL_IMAGES.map((image, index) => (
-                <figure key={`${image.alt}-${index}`} className="admin-image-slide">
-                  <img src={image.src} alt={image.alt} />
-                </figure>
-              ))}
-            </div>
-          </div>
-
-          <div className="admin-image-controls">
-            <div className="admin-image-dots" aria-label="Project image controls">
-              {PORTAL_IMAGES.map((image, index) => (
-                <button
-                  key={`${image.alt}-${index}`}
-                  type="button"
-                  className={index === activeImageIndex ? 'active' : ''}
-                  onClick={() => setActiveImageIndex(index)}
-                  aria-label={`Show image ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        <CampusCarousel
+          slides={PORTAL_IMAGES}
+          variant="compact"
+          className="admin-campus-carousel"
+        />
       </section>
           </>
         )}
@@ -852,11 +963,11 @@ const AdminPortal = ({
             <FaKey className="section-icon" />
           </div>
 
-          {passwordResetRequests.length === 0 ? (
+          {filteredPasswordResetRequests.length === 0 ? (
             <div className="empty-state">No password reset requests have been submitted yet.</div>
           ) : (
             <div className="password-reset-list">
-              {passwordResetRequests.map((request) => {
+              {filteredPasswordResetRequests.map((request) => {
                 const statusLabel = PASSWORD_RESET_REQUEST_STATUS_LABELS[request.status] || 'Pending';
 
                 return (
@@ -999,7 +1110,10 @@ const AdminPortal = ({
             </div>
 
             <div className="room-list">
-              {roomInventory.map((room) => {
+              {filteredRoomInventory.length === 0 ? (
+                <div className="empty-state">No rooms match the current campus and search filters.</div>
+              ) : (
+                filteredRoomInventory.map((room) => {
                 const occupied = getOccupiedCountForRoom(room);
                 const available = Math.max(room.total - occupied, 0);
 
@@ -1065,7 +1179,8 @@ const AdminPortal = ({
                     </div>
                   </div>
                 );
-              })}
+                })
+              )}
             </div>
           </article>
           )}
@@ -1079,11 +1194,6 @@ const AdminPortal = ({
               </div>
 
               <div className="applicant-filters">
-                <select value={campusFilter} onChange={(event) => setCampusFilter(event.target.value)}>
-                  <option value="ALL">All campuses</option>
-                  <option value="UR">UR</option>
-                  <option value="RP">RP</option>
-                </select>
                 <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
                   <option value="ALL">All statuses</option>
                   <option value="pending">Pending</option>
@@ -1263,14 +1373,10 @@ const AdminPortal = ({
                     type="text"
                     value={studentSearch}
                     onChange={(event) => setStudentSearch(event.target.value)}
-                    placeholder="Search name, email, or reg number"
+                    placeholder="Search name, email, reg number, or campus"
                   />
                 </label>
-                <select value={studentCampusFilter} onChange={(event) => setStudentCampusFilter(event.target.value)}>
-                  <option value="ALL">All campuses</option>
-                  <option value="UR">UR</option>
-                  <option value="RP">RP</option>
-                </select>
+                <span className="student-campus-note">Scope: {selectedCampusLabel}</span>
               </div>
             </div>
 
@@ -1538,11 +1644,6 @@ const AdminPortal = ({
             user={adminProfile || { name: displayedAdminName, email: session?.email || '', phone: session?.phone || '', gender: session?.gender || '', allowAdminUpdates: false }}
             userType="admin"
             onUpdateProfile={onUpdateAdminProfile}
-            onProfileImageUpload={onUpdateAdminProfileImage}
-            onUpdateTheme={async () => {
-              // Theme is handled by ThemeContext, just return success
-              return { success: true, message: 'Theme updated' };
-            }}
           />
         )}
       </div>
