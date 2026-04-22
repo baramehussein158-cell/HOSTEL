@@ -14,6 +14,7 @@ import {
   getUserAccountKey,
   getUserRecencyScore,
   readStoredValue,
+  normalizeCampusKey,
   STUDY_CAMPUSES,
   sortApplicationsByDate,
 } from './data/portalData';
@@ -125,6 +126,8 @@ const getStudentAccountKeyFromIdentity = ({ campus, regNumber, email }) =>
     regNumber,
     email,
   });
+
+const normalizeIdentityValue = (value) => value?.trim().toLowerCase() ?? '';
 
 const generateResetCode = () => `${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -338,18 +341,20 @@ function AppContent() {
   }, [activeStudent, isSyncing, session]);
 
   function findStudentByIdentity(identity) {
-    const normalizedEmail = identity.email?.trim().toLowerCase() ?? '';
-    const normalizedRegNumber = identity.regNumber?.trim().toLowerCase() ?? '';
-    const normalizedCampus = identity.campus?.trim().toUpperCase() ?? '';
-    const normalizedGender = identity.gender?.trim().toLowerCase() ?? '';
+    const normalizedEmail = normalizeIdentityValue(identity.email);
+    const normalizedRegNumber = normalizeIdentityValue(identity.regNumber);
+    const normalizedCampus = normalizeCampusKey(identity.campus);
+
+    if (!normalizedEmail || !normalizedRegNumber || !normalizedCampus) {
+      return null;
+    }
 
     return (
       users.find(
         (user) =>
-          user.email?.toLowerCase() === normalizedEmail &&
-          user.regNumber?.toLowerCase() === normalizedRegNumber &&
-          user.campus?.toUpperCase() === normalizedCampus &&
-          user.gender?.toLowerCase() === normalizedGender
+          normalizeIdentityValue(user.email) === normalizedEmail &&
+          normalizeIdentityValue(user.regNumber) === normalizedRegNumber &&
+          normalizeCampusKey(user.campus) === normalizedCampus
       ) ?? null
     );
   }
@@ -598,7 +603,7 @@ function AppContent() {
     if (!matchedStudent) {
       return {
         success: false,
-        message: 'We could not match those details to a student account. Check the email, reg number, campus, and gender.',
+        message: 'We could not match those details to a student account. Check the email, reg number, and campus you used when registering.',
       };
     }
 
@@ -710,7 +715,7 @@ function AppContent() {
     if (!matchedStudent) {
       return {
         success: false,
-        message: 'We could not match those details to a student account. Check the email, reg number, campus, and gender.',
+        message: 'We could not match those details to a student account. Check the email, reg number, and campus you used when registering.',
       };
     }
 

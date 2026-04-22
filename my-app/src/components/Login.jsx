@@ -175,10 +175,9 @@ const Login = ({
     if (
       !resetRequestData.email ||
       !resetRequestData.regNumber ||
-      !resetRequestData.campus ||
-      !resetRequestData.gender
+      !resetRequestData.campus
     ) {
-      setFeedback({ type: 'error', text: 'Email, registration number, campus, and gender are required.' });
+      setFeedback({ type: 'error', text: 'Email, registration number, and campus are required.' });
       return;
     }
 
@@ -209,7 +208,6 @@ const Login = ({
       !resetCodeData.email ||
       !resetCodeData.regNumber ||
       !resetCodeData.campus ||
-      !resetCodeData.gender ||
       !resetCodeData.resetCode ||
       !resetCodeData.newPassword ||
       !resetCodeData.confirm
@@ -587,7 +585,7 @@ const Login = ({
                 <h3>Request one-time code</h3>
                 <p>
                   Send a password reset request to the admin. The admin must approve it before you can reset your
-                  password.
+                  password. Gender is optional and only used for reference.
                 </p>
 
                 <div className="form-group">
@@ -620,7 +618,6 @@ const Login = ({
                         type="radio"
                         name="resetRequestCampus"
                         value="UR"
-                        required
                         checked={resetRequestData.campus === 'UR'}
                         onChange={(event) => setResetRequestData({ ...resetRequestData, campus: event.target.value })}
                         disabled={isSubmitting || isSyncing}
@@ -641,13 +638,12 @@ const Login = ({
                   </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="reset-request-gender">Gender</label>
+                  <label htmlFor="reset-request-gender">Gender <span className="optional-note">(optional)</span></label>
                   <select
                     id="reset-request-gender"
                     value={resetRequestData.gender}
                     onChange={(event) => setResetRequestData({ ...resetRequestData, gender: event.target.value })}
                     disabled={isSubmitting || isSyncing}
-                    required
                   >
                     <option value="">Select your gender</option>
                     {GENDER_OPTIONS.map((genderOption) => (
@@ -710,7 +706,6 @@ const Login = ({
                         type="radio"
                         name="resetConfirmCampus"
                         value="UR"
-                        required
                         checked={resetCodeData.campus === 'UR'}
                         onChange={(event) => setResetCodeData({ ...resetCodeData, campus: event.target.value })}
                         disabled={isSubmitting || isSyncing}
@@ -731,13 +726,12 @@ const Login = ({
                   </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="reset-confirm-gender">Gender</label>
+                  <label htmlFor="reset-confirm-gender">Gender <span className="optional-note">(optional)</span></label>
                   <select
                     id="reset-confirm-gender"
                     value={resetCodeData.gender}
                     onChange={(event) => setResetCodeData({ ...resetCodeData, gender: event.target.value })}
                     disabled={isSubmitting || isSyncing}
-                    required
                   >
                     <option value="">Select your gender</option>
                     {GENDER_OPTIONS.map((genderOption) => (

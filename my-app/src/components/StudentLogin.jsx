@@ -167,10 +167,9 @@ const StudentLogin = ({
     if (
       !resetRequestData.email ||
       !resetRequestData.regNumber ||
-      !resetRequestData.campus ||
-      !resetRequestData.gender
+      !resetRequestData.campus
     ) {
-      setMessage('Email, registration number, campus, and gender are required.');
+      setMessage('Email, registration number, and campus are required.');
       setMessageType('error');
       return;
     }
@@ -220,7 +219,6 @@ const StudentLogin = ({
       !resetCodeData.email ||
       !resetCodeData.regNumber ||
       !resetCodeData.campus ||
-      !resetCodeData.gender ||
       !resetCodeData.resetCode ||
       !resetCodeData.newPassword ||
       !resetCodeData.confirm
@@ -638,7 +636,7 @@ const StudentLogin = ({
             <div className="reset-mode">
               <form className="reset-card" onSubmit={handlePasswordResetRequestSubmit}>
                 <h3>Request password reset</h3>
-                <p>Use the same email and registration number you registered with. The admin will review and issue a reset code.</p>
+                <p>Use the same email and registration number you registered with. Campus helps verify your record and the admin will review your request before issuing a reset code.</p>
 
                 <div className="form-group">
                   <label htmlFor="reset-email">
@@ -697,7 +695,7 @@ const StudentLogin = ({
                   <div className="form-group">
                     <label htmlFor="reset-gender">
                       <FaVenusMars className="icon" />
-                      Gender
+                      Gender <span className="optional-note">(optional)</span>
                     </label>
                     <select
                       id="reset-gender"
@@ -747,7 +745,7 @@ const StudentLogin = ({
 
               <form className="reset-card" onSubmit={handlePasswordResetConfirmSubmit}>
                 <h3>Set new password</h3>
-                <p>After the admin approves your request and gives you a code, enter it here to finish the reset.</p>
+                <p>After the admin approves your request and gives you a code, enter it here to finish the reset. You only need the email, registration number, campus, and code.</p>
 
                 <div className="form-group">
                   <label htmlFor="reset-confirm-email">
@@ -806,7 +804,7 @@ const StudentLogin = ({
                   <div className="form-group">
                     <label htmlFor="reset-confirm-gender">
                       <FaVenusMars className="icon" />
-                      Gender
+                      Gender <span className="optional-note">(optional)</span>
                     </label>
                     <select
                       id="reset-confirm-gender"

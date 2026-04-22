@@ -82,6 +82,32 @@ export const STUDY_CAMPUSES = {
   ],
 };
 
+export const normalizeCampusKey = (campus) => {
+  const campusValue = campus?.trim().toUpperCase() ?? '';
+
+  if (!campusValue) {
+    return '';
+  }
+
+  if (
+    campusValue === 'UR' ||
+    campusValue.includes('UNIVERSITY OF RWANDA') ||
+    campusValue.startsWith('UR ')
+  ) {
+    return 'UR';
+  }
+
+  if (
+    campusValue === 'RP' ||
+    campusValue.includes('RWANDA POLYTECHNIC') ||
+    campusValue.startsWith('RP ')
+  ) {
+    return 'RP';
+  }
+
+  return campusValue;
+};
+
 export const createId = (prefix) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 export const getUserAccountKey = (user) => {
@@ -91,7 +117,7 @@ export const getUserAccountKey = (user) => {
 
   const email = user.email?.trim().toLowerCase() ?? '';
   const regNumber = user.regNumber?.trim().toLowerCase() ?? '';
-  const campus = user.campus?.trim().toUpperCase() ?? '';
+  const campus = normalizeCampusKey(user.campus);
   return `${campus}::${regNumber}::${email}`;
 };
 
