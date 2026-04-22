@@ -1,0 +1,192 @@
+.campus-carousel {
+  display: grid;
+  gap: 1rem;
+}
+
+.campus-carousel__header {
+  display: grid;
+  gap: 0.35rem;
+
+  h2 {
+    margin: 0;
+    font-size: clamp(1.4rem, 2vw, 2rem);
+    letter-spacing: -0.03em;
+  }
+
+  p {
+    margin: 0;
+    color: rgba(148, 163, 184, 0.92);
+    max-width: 62ch;
+  }
+}
+
+.campus-carousel__frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.18), transparent 32%),
+    linear-gradient(180deg, rgba(12, 18, 31, 0.94), rgba(8, 15, 28, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 30px 60px rgba(2, 6, 23, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.campus-carousel--default .campus-carousel__frame {
+  min-height: 420px;
+}
+
+.campus-carousel--compact .campus-carousel__frame {
+  min-height: 320px;
+}
+
+.campus-carousel__track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.campus-carousel__slide {
+  position: relative;
+  flex: 0 0 100%;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.campus-carousel__image {
+  display: block;
+  width: 100%;
+  height: clamp(320px, 50vw, 540px);
+  object-fit: cover;
+  filter: saturate(1.08) contrast(1.04) brightness(1.02);
+}
+
+.campus-carousel--compact .campus-carousel__image {
+  height: clamp(280px, 42vw, 380px);
+}
+
+.campus-carousel__overlay {
+  position: absolute;
+  inset: auto 1rem 1rem 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2), rgba(15, 23, 42, 0.82));
+  backdrop-filter: blur(14px);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.28);
+  display: grid;
+  gap: 0.4rem;
+  max-width: min(92%, 34rem);
+}
+
+.campus-carousel__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #93c5fd;
+}
+
+.campus-carousel__overlay h3 {
+  margin: 0;
+  font-size: clamp(1.1rem, 1.7vw, 1.7rem);
+  letter-spacing: -0.03em;
+}
+
+.campus-carousel__overlay p:last-child {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.9);
+  line-height: 1.55;
+}
+
+.campus-carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.2rem 0.5rem 0.05rem;
+}
+
+.campus-carousel__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.62);
+  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.16);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.campus-carousel__arrow:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.82);
+  border-color: rgba(147, 197, 253, 0.5);
+}
+
+.campus-carousel__dots {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.campus-carousel__dots button {
+  width: 0.72rem;
+  height: 0.72rem;
+  padding: 0;
+  border-radius: 999px;
+  border: none;
+  background: rgba(148, 163, 184, 0.48);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    width 0.2s ease;
+}
+
+.campus-carousel__dots button.active {
+  width: 1.6rem;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+}
+
+.campus-carousel__dots button:hover {
+  transform: scale(1.08);
+}
+
+@media (max-width: 768px) {
+  .campus-carousel__frame {
+    border-radius: 22px;
+  }
+
+  .campus-carousel__overlay {
+    inset: auto 0.75rem 0.75rem 0.75rem;
+    padding: 0.9rem;
+  }
+
+  .campus-carousel__controls {
+    gap: 0.55rem;
+  }
+
+  .campus-carousel__arrow {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-carousel__track {
+    transition: none;
+  }
+}

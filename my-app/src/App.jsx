@@ -945,10 +945,56 @@ function AppContent() {
         studentAccountKey: updatedAccountKey,
       });
 
+      setSession((currentSession) => {
+        if (currentSession?.role !== 'student') {
+          return currentSession;
+        }
+
+        return {
+          ...currentSession,
+          name: nextName,
+          email: nextEmail,
+          regNumber: activeStudent.regNumber,
+          accountKey: updatedAccountKey,
+        };
+      });
+
       return { success: true, message: 'Your profile was updated successfully.' };
     } catch (error) {
       console.error('Failed to update active student profile:', error);
       return { success: false, message: 'Failed to update your profile in Database.' };
+    }
+  };
+
+  const handleUpdateAdminProfile = async (updates) => {
+    const nextName = updates.name?.trim() ?? session?.name ?? ADMIN_ACCOUNT.name;
+    const nextEmail = updates.email?.trim() ?? session?.email ?? ADMIN_ACCOUNT.email;
+    const nextPhone = updates.phone?.trim() ?? session?.phone ?? '';
+    const nextGender = updates.gender ?? session?.gender ?? '';
+
+    if (!nextName || !nextEmail) {
+      return { success: false, message: 'Name and email are required.' };
+    }
+
+    try {
+      setSession((currentSession) => {
+        if (currentSession?.role !== 'admin') {
+          return currentSession;
+        }
+
+        return {
+          ...currentSession,
+          name: nextName,
+          email: nextEmail,
+          phone: nextPhone,
+          gender: nextGender,
+        };
+      });
+
+      return { success: true, message: 'Admin profile updated successfully.' };
+    } catch (error) {
+      console.error('Failed to update admin profile:', error);
+      return { success: false, message: 'Failed to update the admin profile.' };
     }
   };
 
@@ -1177,6 +1223,42 @@ function AppContent() {
     }
   };
 
+  const handleAdminProfileImageUpload = async (profileImageFile) => {
+    if (!profileImageFile) {
+      return { success: false, message: 'Choose a profile image first.' };
+    }
+
+    try {
+      const profileImage = await uploadProfileImage('admin-profile', profileImageFile);
+
+      setSession((currentSession) => {
+        if (currentSession?.role !== 'admin') {
+          return currentSession;
+        }
+
+        return {
+          ...currentSession,
+          profileImageUrl: profileImage.url,
+          profileImagePath: profileImage.path,
+          profileImageUpdatedAt: profileImage.updatedAt,
+        };
+      });
+
+      return {
+        success: true,
+        url: buildProfileImageSrc(profileImage.url, profileImage.updatedAt),
+        profileImageUrl: profileImage.url,
+        profileImageUpdatedAt: profileImage.updatedAt,
+      };
+    } catch (error) {
+      console.error('Failed to upload admin profile image:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to upload the admin profile image. Check your storage rules.',
+      };
+    }
+  };
+
   const handlePortalSelect = (portal) => {
     setSelectedPortal(portal);
     localStorage.setItem('selected-portal', JSON.stringify(portal));
@@ -1292,6 +1374,15 @@ function AppContent() {
             onLogout={handleLogout}
             session={session}
             adminName={session?.name || ADMIN_ACCOUNT.name}
+            adminProfile={{
+              name: session?.name || ADMIN_ACCOUNT.name,
+              email: session?.email || ADMIN_ACCOUNT.email,
+              phone: session?.phone || '',
+              gender: session?.gender || '',
+              profileImageUrl: session?.profileImageUrl || '',
+              profileImageUpdatedAt: session?.profileImageUpdatedAt || '',
+              allowAdminUpdates: false,
+            }}
             applications={applications}
             roomInventory={roomInventory}
             registeredUsers={users}
@@ -1302,6 +1393,8 @@ function AppContent() {
             onUpdateStudent={handleUpdateStudent}
             onDeleteStudent={handleDeleteStudent}
             onReviewPasswordResetRequest={handlePasswordResetReview}
+            onUpdateAdminProfile={handleUpdateAdminProfile}
+            onUpdateAdminProfileImage={handleAdminProfileImageUpload}
           />
         ) : (
           <Login

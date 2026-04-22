@@ -359,11 +359,7 @@ const Dashboard = ({
                   setViewMode('status');
                 }}
               >
-                {studentAvatarSrc ? (
-                  <img src={studentAvatarSrc} alt="" />
-                ) : (
-                  <span>{studentInitials}</span>
-                )}
+                {studentAvatarSrc ? <img src={studentAvatarSrc} alt="" /> : <span>{studentInitials}</span>}
               </button>
               <span className="header-user-subtitle">Signed in as {displayName}</span>
             </div>
@@ -662,6 +658,7 @@ const Dashboard = ({
             user={student}
             userType="student"
             onUpdateProfile={onUpdateProfile}
+            onProfileImageUpload={onProfileImageUpload}
             onUpdateTheme={async () => {
               return { success: true, message: 'Theme updated successfully' };
             }}

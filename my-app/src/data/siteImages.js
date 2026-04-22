@@ -1,66 +1,47 @@
-import landingHero from '../assets/landing/download-4k.jpg';
-import landingHero2 from '../assets/landing/download-1-4k.jpg';
-import landingHero3 from '../assets/landing/download-2-4k.jpg';
-import landingHero4 from '../assets/landing/download-3-4k.jpg';
-import landingHero5 from '../assets/landing/download-4-4k.jpg';
-import landingHero6 from '../assets/landing/download-5-4k.jpg';
-import landingHeroCrop from '../assets/landing/download-hero.jpg';
-import landingHeroCrop2 from '../assets/landing/download-1-hero.jpg';
-import landingHeroCrop3 from '../assets/landing/download-2-hero.jpg';
-import landingHeroCrop4 from '../assets/landing/download-3-hero.jpg';
-import landingHeroCrop5 from '../assets/landing/download-4-hero.jpg';
-import landingHeroCrop6 from '../assets/landing/download-5-hero.jpg';
+import urMain from '../assets/campus/ur-main.png';
+import urAd from '../assets/campus/ur-ad.png';
+import urHouse from '../assets/campus/ur-house.png';
+import rpHouse from '../assets/campus/rp-house.png';
+import rpLab from '../assets/campus/rp-lab.png';
 
-export const PORTAL_IMAGES = [
+export const CAMPUS_SLIDES = [
   {
-    src: landingHero,
-    alt: 'Portal image 1',
+    src: urMain,
+    alt: 'University of Rwanda main campus building',
+    eyebrow: 'University of Rwanda',
+    title: 'Main campus view',
+    copy: 'A bright front-facing campus image for the landing page and student dashboard carousel.',
   },
   {
-    src: landingHero2,
-    alt: 'Portal image 2',
+    src: urAd,
+    alt: 'University of Rwanda administration building',
+    eyebrow: 'University of Rwanda',
+    title: 'Administration block',
+    copy: 'Use this slide to show the academic and operations side of the portal in a polished animation.',
   },
   {
-    src: landingHero3,
-    alt: 'Portal image 3',
+    src: urHouse,
+    alt: 'University of Rwanda house building',
+    eyebrow: 'University of Rwanda',
+    title: 'Campus housing',
+    copy: 'This image works well for hostel and accommodation messaging across the portal screens.',
   },
   {
-    src: landingHero4,
-    alt: 'Portal image 4',
+    src: rpHouse,
+    alt: 'Rwanda Polytechnic house building',
+    eyebrow: 'Rwanda Polytechnic',
+    title: 'RP campus housing',
+    copy: 'A wide scenic slide that adds motion and a stronger campus identity in the dashboard areas.',
   },
   {
-    src: landingHero5,
-    alt: 'Portal image 5',
-  },
-  {
-    src: landingHero6,
-    alt: 'Portal image 6',
+    src: rpLab,
+    alt: 'Rwanda Polytechnic laboratory building',
+    eyebrow: 'Rwanda Polytechnic',
+    title: 'Lab and learning spaces',
+    copy: 'The final slide gives the portal a clean academic finish with a modern campus research look.',
   },
 ];
 
-export const LOGIN_HERO_IMAGES = [
-  {
-    src: landingHeroCrop,
-    alt: 'Hero image 1',
-  },
-  {
-    src: landingHeroCrop2,
-    alt: 'Hero image 2',
-  },
-  {
-    src: landingHeroCrop3,
-    alt: 'Hero image 3',
-  },
-  {
-    src: landingHeroCrop4,
-    alt: 'Hero image 4',
-  },
-  {
-    src: landingHeroCrop5,
-    alt: 'Hero image 5',
-  },
-  {
-    src: landingHeroCrop6,
-    alt: 'Hero image 6',
-  },
-];
+export const PORTAL_IMAGES = CAMPUS_SLIDES;
+
+export const LOGIN_HERO_IMAGES = CAMPUS_SLIDES;

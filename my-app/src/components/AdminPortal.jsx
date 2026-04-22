@@ -45,6 +45,9 @@ const AdminPortal = ({
   onUpdateStudent,
   onDeleteStudent,
   onReviewPasswordResetRequest,
+  onUpdateAdminProfile,
+  onUpdateAdminProfileImage,
+  adminProfile,
   session,
 }) => {
   const { theme, changeTheme } = useTheme();
@@ -60,6 +63,10 @@ const AdminPortal = ({
   const [isSaving, setIsSaving] = useState(false);
   const displayedAdminName = session?.name || adminName || 'Housing Administrator';
   const adminInitials = getInitials(displayedAdminName, 'AD');
+  const adminAvatarSrc = buildProfileImageSrc(
+    session?.profileImageUrl || adminProfile?.profileImageUrl,
+    session?.profileImageUpdatedAt || adminProfile?.profileImageUpdatedAt
+  );
   const timeGreeting = getTimeGreeting();
   const currentTimeLabel = getLocalTimeLabel();
 
@@ -533,7 +540,7 @@ const AdminPortal = ({
                   setActiveView('settings');
                 }}
               >
-                <span>{adminInitials}</span>
+                {adminAvatarSrc ? <img src={adminAvatarSrc} alt="" /> : <span>{adminInitials}</span>}
               </button>
               <span className="header-user-subtitle">Signed in as {displayedAdminName}</span>
             </div>
@@ -1528,14 +1535,10 @@ const AdminPortal = ({
 
         {activeView === 'settings' && (
           <Settings
-            user={registeredUsers.find(u => u.id === selectedStudentId) || registeredUsers[0]}
+            user={adminProfile || { name: displayedAdminName, email: session?.email || '', phone: session?.phone || '', gender: session?.gender || '', allowAdminUpdates: false }}
             userType="admin"
-            onUpdateProfile={async (data) => {
-              if (selectedStudentId) {
-                return await onUpdateStudent(selectedStudentId, data);
-              }
-              return { success: false, message: 'No student selected' };
-            }}
+            onUpdateProfile={onUpdateAdminProfile}
+            onProfileImageUpload={onUpdateAdminProfileImage}
             onUpdateTheme={async () => {
               // Theme is handled by ThemeContext, just return success
               return { success: true, message: 'Theme updated' };

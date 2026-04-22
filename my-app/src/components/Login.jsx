@@ -1,53 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FaArrowLeft, FaChartLine, FaGraduationCap, FaShieldAlt } from 'react-icons/fa';
 import { GENDER_OPTIONS } from '../data/portalData';
 import { LOGIN_HERO_IMAGES } from '../data/siteImages';
 import { useTheme } from '../contexts/ThemeContext';
+import CampusCarousel from './CampusCarousel';
 import './Login.scss';
-
-const HERO_SLIDES = LOGIN_HERO_IMAGES.map((image, index) => {
-  const slideText = [
-    {
-      eyebrow: 'Campus portal preview',
-      title: 'One clean place for students and admin teams.',
-      copy: 'Move between login, registration, password recovery, and room tracking with a polished motion sequence.',
-    },
-    {
-      eyebrow: 'Room visibility',
-      title: 'Track capacity without guessing.',
-      copy: 'The portal highlights UR and RP room totals, availability, and approvals so the admin sees the full picture.',
-    },
-    {
-      eyebrow: 'Password control',
-      title: 'Reset flows stay secure and organized.',
-      copy: 'Students can request resets and admins can issue new passwords from the same workflow, all in one view.',
-    },
-    {
-      eyebrow: 'Profile upload',
-      title: 'Students can add a profile image.',
-      copy: 'Each student can upload a personal profile photo from their dashboard and keep their account identity current.',
-    },
-    {
-      eyebrow: 'Admin summary',
-      title: 'Room totals stay visible to staff.',
-      copy: 'Admin users can quickly review campus occupancy, remaining capacity, and room availability from the portal.',
-    },
-    {
-      eyebrow: 'Mobile ready',
-      title: 'Built to fit smaller screens too.',
-      copy: 'The layout adapts smoothly so the portal stays readable and usable on phones and tablets.',
-    },
-  ][index] ?? {
-    eyebrow: 'Campus portal preview',
-    title: 'CampusStay portal image',
-    copy: 'A project image from your local assets.',
-  };
-
-  return {
-    ...image,
-    ...slideText,
-  };
-});
 
 const Login = ({
   onStudentLogin,
@@ -93,25 +50,8 @@ const Login = ({
   });
   const [feedback, setFeedback] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
 
   const resetFeedback = () => setFeedback(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return undefined;
-    }
-
-    const interval = window.setInterval(() => {
-      setActiveHeroSlide((currentSlide) => (currentSlide + 1) % HERO_SLIDES.length);
-    }, 4000);
-
-    return () => window.clearInterval(interval);
-  }, []);
 
   const handleLoginSubmit = async (event) => {
     event.preventDefault();
@@ -343,20 +283,7 @@ const Login = ({
           </div>
 
           <div className="hero-visual" aria-label="Campus portal highlights">
-            <div className="hero-visual-frame" aria-live="polite">
-              <article className="hero-visual-slide" key={activeHeroSlide}>
-                <img
-                  src={HERO_SLIDES[activeHeroSlide].src}
-                  alt={HERO_SLIDES[activeHeroSlide].alt}
-                  className="hero-visual-image"
-                />
-                <div className="hero-visual-copy">
-                  <p className="hero-visual-eyebrow">{HERO_SLIDES[activeHeroSlide].eyebrow}</p>
-                  <h2>{HERO_SLIDES[activeHeroSlide].title}</h2>
-                  <p>{HERO_SLIDES[activeHeroSlide].copy}</p>
-                </div>
-              </article>
-            </div>
+            <CampusCarousel slides={LOGIN_HERO_IMAGES} className="login-campus-carousel" />
           </div>
         </section>
 

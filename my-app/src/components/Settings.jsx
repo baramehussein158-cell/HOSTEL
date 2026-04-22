@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FaUser,
   FaMoon,
@@ -16,6 +16,7 @@ const Settings = ({
   user,
   onUpdateProfile,
   onUpdateTheme,
+  onProfileImageUpload,
   userType = 'student'
 }) => {
   const { theme, color, changeTheme, changeColor, themeOptions, colorOptions } = useTheme();
@@ -27,8 +28,23 @@ const Settings = ({
     gender: user?.gender || '',
     allowAdminUpdates: user?.allowAdminUpdates || false,
   });
+  const [profileImageFile, setProfileImageFile] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      gender: user?.gender || '',
+      allowAdminUpdates: user?.allowAdminUpdates || false,
+    });
+  }, [user?.allowAdminUpdates, user?.email, user?.gender, user?.name, user?.phone]);
+
+  useEffect(() => {
+    setProfileImageFile(null);
+  }, [user?.profileImageUpdatedAt, user?.profileImageUrl]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -43,9 +59,18 @@ const Settings = ({
     setMessage('');
 
     try {
+      if (profileImageFile && onProfileImageUpload) {
+        const uploadResult = await onProfileImageUpload(profileImageFile);
+        if (!uploadResult?.success) {
+          setMessage(uploadResult?.message || 'Failed to update profile image');
+          return;
+        }
+      }
+
       const result = await onUpdateProfile(formData);
       if (result.success) {
         setMessage('Profile updated successfully!');
+        setProfileImageFile(null);
       } else {
         setMessage(result.message || 'Failed to update profile');
       }
@@ -158,6 +183,21 @@ const Settings = ({
                     <option value="other">Other</option>
                   </select>
                 </div>
+
+                {onProfileImageUpload && (
+                  <div className="form-group">
+                    <label htmlFor="profile-image">Profile Image</label>
+                    <div className="image-upload-row">
+                      <input
+                        type="file"
+                        id="profile-image"
+                        accept="image/*"
+                        onChange={(event) => setProfileImageFile(event.target.files?.[0] || null)}
+                      />
+                      <span>{profileImageFile ? profileImageFile.name : 'Choose an image to update the avatar'}</span>
+                    </div>
+                  </div>
+                )}
 
                 {userType === 'student' && (
                   <div className="form-group checkbox-group">
