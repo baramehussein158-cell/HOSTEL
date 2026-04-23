@@ -795,18 +795,12 @@ function AppContent() {
       return { success: false, message: 'Student account not found.' };
     }
 
-    if (!student.allowAdminUpdates) {
-      return {
-        success: false,
-        message: 'This student has not allowed admin updates yet. Ask the student to enable access first.',
-      };
-    }
-
     const nextName = updates.name?.trim() ?? student.name;
     const nextEmail = updates.email?.trim() ?? student.email;
     const nextRegNumber = updates.regNumber?.trim() ?? student.regNumber;
     const nextCampus = updates.campus?.trim() ?? student.campus;
     const nextGender = updates.gender ?? student.gender;
+    const nextAllowAdminUpdates = Boolean(updates.allowAdminUpdates ?? student.allowAdminUpdates);
 
     if (!nextName || !nextEmail || !nextRegNumber || !nextCampus || !nextGender) {
       return { success: false, message: 'All student details must be complete before saving changes.' };
@@ -863,6 +857,7 @@ function AppContent() {
         regNumber: nextRegNumber,
         campus: nextCampus,
         gender: nextGender,
+        allowAdminUpdates: nextAllowAdminUpdates,
         updatedAt: new Date().toISOString(),
         updatedBy: 'admin',
         accountKey: updatedAccountKey,
@@ -874,6 +869,7 @@ function AppContent() {
         regNumber: nextRegNumber,
         campus: nextCampus,
         gender: nextGender,
+        allowAdminUpdates: nextAllowAdminUpdates,
         studentAccountKey: updatedAccountKey,
       });
 

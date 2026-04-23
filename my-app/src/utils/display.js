@@ -42,3 +42,16 @@ export const getLocalTimeLabel = (date = new Date()) =>
     hour: 'numeric',
     minute: '2-digit',
   }).format(date);
+
+export const getDisplayName = (values, fallback = 'Guest') => {
+  const candidates = Array.isArray(values) ? values : [values];
+
+  for (const value of candidates) {
+    const text = String(value ?? '').trim();
+    if (text) {
+      return text;
+    }
+  }
+
+  return fallback;
+};

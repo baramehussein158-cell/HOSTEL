@@ -74,6 +74,13 @@ const DashboardSidebar = ({
       description: 'Total students',
     },
     {
+      id: 'students',
+      label: 'Students',
+      icon: FaUsers,
+      count: stats.totalStudents || 0,
+      description: 'View and manage accounts',
+    },
+    {
       id: 'applications',
       label: 'Applications',
       icon: FaClipboardList,

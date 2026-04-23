@@ -29,7 +29,7 @@ import {
   formatCurrency,
 } from '../data/portalData';
 import { PORTAL_IMAGES } from '../data/siteImages';
-import { getLocalTimeLabel, getTimeGreeting } from '../utils/display';
+import { getDisplayName, getLocalTimeLabel, getTimeGreeting } from '../utils/display';
 import CampusCarousel from './CampusCarousel';
 import HighlightText from './HighlightText';
 import DashboardSidebar from './DashboardSidebar';
@@ -102,7 +102,10 @@ const Dashboard = ({
   const [topSearch, setTopSearch] = useState('');
   const formRef = useRef(null);
   const statusRef = useRef(null);
-  const displayName = student.name || session?.name || 'Student';
+  const displayName = getDisplayName(
+    [student?.name, session?.name, student?.email?.split('@')[0], 'Student'],
+    'Student'
+  );
   const timeGreeting = getTimeGreeting();
   const currentTimeLabel = getLocalTimeLabel();
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
@@ -386,6 +389,7 @@ const Dashboard = ({
             <p className="subheading">
               Manage your room application, submit payment details, and track admin decisions from one portal.
             </p>
+            <p className="header-user-subtitle">Signed in as {displayName}</p>
             <p className="time-note">Local time: {currentTimeLabel}</p>
             <div className="campus-intro">
               <span className="campus-label">{campusName}</span>

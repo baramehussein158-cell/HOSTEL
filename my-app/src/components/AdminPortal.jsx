@@ -26,7 +26,7 @@ import {
   sortApplicationsByDate,
 } from '../data/portalData';
 import { PORTAL_IMAGES } from '../data/siteImages';
-import { getInitials, getLocalTimeLabel, getTimeGreeting } from '../utils/display';
+import { getDisplayName, getInitials, getLocalTimeLabel, getTimeGreeting } from '../utils/display';
 import CampusCarousel from './CampusCarousel';
 import HighlightText from './HighlightText';
 import DashboardSidebar from './DashboardSidebar';
@@ -71,7 +71,10 @@ const AdminPortal = ({
   const [studentSearch, setStudentSearch] = useState('');
   const [flash, setFlash] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const displayedAdminName = session?.name || adminName || 'Housing Administrator';
+  const displayedAdminName = getDisplayName(
+    [session?.name, adminName, session?.email?.split('@')[0], 'Housing Administrator'],
+    'Housing Administrator'
+  );
   const adminInitials = getInitials(displayedAdminName, 'AD');
   const adminAvatarSrc = buildProfileImageSrc(
     session?.profileImageUrl || adminProfile?.profileImageUrl,
@@ -476,6 +479,7 @@ const AdminPortal = ({
         regNumber: '',
         campus: 'UR',
         gender: '',
+        allowAdminUpdates: false,
       };
     }
 
@@ -485,6 +489,7 @@ const AdminPortal = ({
       regNumber: selectedStudent.regNumber ?? '',
       campus: selectedStudent.campus ?? 'UR',
       gender: selectedStudent.gender ?? '',
+      allowAdminUpdates: Boolean(selectedStudent.allowAdminUpdates),
     };
   }, [selectedStudent]);
 
@@ -1428,7 +1433,6 @@ const AdminPortal = ({
                       <input
                         type="text"
                         value={selectedStudentDraft.name}
-                        disabled={isSaving || !selectedStudent.allowAdminUpdates}
                         onChange={(event) =>
                           setSelectedStudentDraft((currentDraft) => ({
                             ...currentDraft,
@@ -1442,7 +1446,6 @@ const AdminPortal = ({
                       <input
                         type="email"
                         value={selectedStudentDraft.email}
-                        disabled={isSaving || !selectedStudent.allowAdminUpdates}
                         onChange={(event) =>
                           setSelectedStudentDraft((currentDraft) => ({
                             ...currentDraft,
@@ -1456,7 +1459,6 @@ const AdminPortal = ({
                       <input
                         type="text"
                         value={selectedStudentDraft.regNumber}
-                        disabled={isSaving || !selectedStudent.allowAdminUpdates}
                         onChange={(event) =>
                           setSelectedStudentDraft((currentDraft) => ({
                             ...currentDraft,
@@ -1469,7 +1471,6 @@ const AdminPortal = ({
                       <span>Campus</span>
                       <select
                         value={selectedStudentDraft.campus}
-                        disabled={isSaving || !selectedStudent.allowAdminUpdates}
                         onChange={(event) =>
                           setSelectedStudentDraft((currentDraft) => ({
                             ...currentDraft,
@@ -1485,7 +1486,6 @@ const AdminPortal = ({
                       <span>Gender</span>
                       <select
                         value={selectedStudentDraft.gender}
-                        disabled={isSaving || !selectedStudent.allowAdminUpdates}
                         onChange={(event) =>
                           setSelectedStudentDraft((currentDraft) => ({
                             ...currentDraft,
@@ -1506,22 +1506,32 @@ const AdminPortal = ({
                       <strong>
                         {ADMIN_UPDATE_ACCESS_LABELS[String(Boolean(selectedStudent.allowAdminUpdates))]}
                       </strong>
+                      <label className="student-permission-toggle">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(selectedStudentDraft.allowAdminUpdates)}
+                          onChange={(event) =>
+                            setSelectedStudentDraft((currentDraft) => ({
+                              ...currentDraft,
+                              allowAdminUpdates: event.target.checked,
+                            }))
+                          }
+                        />
+                        <span>Allow admin updates</span>
+                      </label>
                     </div>
                   </div>
 
-                  {!selectedStudent.allowAdminUpdates && (
-                    <div className="empty-state student-lock-note">
-                      This student has not granted admin update access yet. Ask them to enable it from their portal
-                      before editing the account or resetting the password. You can still review and delete the
-                      account from this panel.
-                    </div>
-                  )}
+                  <div className="empty-state student-lock-note">
+                    Admins can edit the selected student directly from this panel. The access flag is still shown so you
+                    can keep track of whether the student had approved admin updates.
+                  </div>
 
                   <div className="student-editor-actions">
                     <button
                       type="button"
                       className="action-button"
-                      disabled={isSaving || !selectedStudent.allowAdminUpdates}
+                      disabled={isSaving}
                       onClick={handleSelectedStudentSave}
                     >
                       {isSaving ? 'Saving...' : 'Save Changes'}
@@ -1612,7 +1622,7 @@ const AdminPortal = ({
                           disabled={isSaving}
                           onClick={() => setSelectedStudentId(student.id)}
                         >
-                          Select
+                          Select / View
                         </button>
                         <label className="password-reset-group">
                           <span>
