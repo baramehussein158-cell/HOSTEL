@@ -11,6 +11,14 @@ import {
 import { useTheme } from '../contexts/ThemeContext';
 import './Settings.scss';
 
+const normalizePhoneNumberInput = (value) => {
+  const digits = String(value ?? '')
+    .replace(/\D/g, '')
+    .slice(0, 12);
+
+  return digits ? `+${digits}` : '';
+};
+
 const Settings = ({
   user,
   onUpdateProfile,
@@ -48,7 +56,7 @@ const Settings = ({
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : name === 'phone' ? normalizePhoneNumberInput(value) : value
     }));
   };
 
@@ -57,6 +65,11 @@ const Settings = ({
     setMessage('');
 
     try {
+      if (formData.phone && !/^\+\d{1,12}$/.test(formData.phone)) {
+        setMessage('Phone number must start with + and contain up to 12 digits, for example +250788445512.');
+        return;
+      }
+
       const result = await onUpdateProfile({
         ...formData,
       });
@@ -156,8 +169,12 @@ const Settings = ({
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="Enter your phone number"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    maxLength={13}
+                    placeholder="+250788445512"
                   />
+                  <small className="field-hint">Use + followed by up to 12 digits. No letters.</small>
                 </div>
 
                 <div className="form-group">

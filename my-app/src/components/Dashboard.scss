@@ -1263,6 +1263,13 @@
   min-height: 100px;
 }
 
+.field-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  opacity: 0.72;
+}
+
 .payment-form-block {
   padding: 1.35rem;
   border-radius: 18px;
@@ -2216,26 +2223,19 @@
 }
 
 .dashboard .header-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1rem;
-  align-items: stretch;
+  display: flex;
+  align-items: center;
+  min-height: clamp(6rem, 11vw, 8rem);
+  padding: 0.2rem 0 0.5rem;
 }
 
 .dashboard .hero-copy {
-  display: grid;
-  align-content: start;
-  padding: 0.2rem 0 0.15rem;
+  display: flex;
+  align-items: center;
 }
 
-.time-note {
-  margin: 0.15rem 0 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #5b6476;
-}
-
-.dashboard .hero-copy h1 {
+.dashboard .greeting-title {
+  margin: 0;
   font-size: clamp(2rem, 4vw, 2.9rem);
   line-height: 1.08;
   color: #10233d;

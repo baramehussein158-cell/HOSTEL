@@ -29,7 +29,7 @@ import {
   formatCurrency,
 } from '../data/portalData';
 import { PORTAL_IMAGES } from '../data/siteImages';
-import { getDisplayName, getLocalTimeLabel, getTimeGreeting } from '../utils/display';
+import { getDisplayName, getTimeGreeting } from '../utils/display';
 import CampusCarousel from './CampusCarousel';
 import HighlightText from './HighlightText';
 import DashboardSidebar from './DashboardSidebar';
@@ -37,6 +37,13 @@ import Settings from './Settings';
 import './Dashboard.scss';
 
 const getGenderLabel = (gender) => GENDER_OPTIONS.find((option) => option.value === gender)?.label || gender || 'Not set';
+const normalizePhoneNumberInput = (value) => {
+  const digits = String(value ?? '')
+    .replace(/\D/g, '')
+    .slice(0, 12);
+
+  return digits ? `+${digits}` : '';
+};
 
 const STUDENT_STATUS_COPY = {
   pending: {
@@ -93,7 +100,6 @@ const Dashboard = ({
   onUpdateProfile,
   session,
 }) => {
-  const campusName = campus === 'RP' ? 'Rwanda Polytechnic' : 'University of Rwanda';
   const { theme, changeTheme } = useTheme();
   const [activeView, setActiveView] = useState('application-status');
   const [showForm, setShowForm] = useState(false);
@@ -107,7 +113,6 @@ const Dashboard = ({
     'Student'
   );
   const timeGreeting = getTimeGreeting();
-  const currentTimeLabel = getLocalTimeLabel();
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
   const applicationStatus = latestApplication?.status ?? 'ready';
   const paymentStatus = latestApplication?.paymentStatus ?? 'pending';
@@ -124,6 +129,7 @@ const Dashboard = ({
     summary: 'Payment information will appear here after you submit an application.',
   };
   const passwordResetStatus = latestPasswordResetRequest?.status ?? '';
+  const rejectionReason = latestApplication?.rejectionReason?.trim();
   const profileGenderLabel = getGenderLabel(student.gender);
   const studentQuickLinks = [
     {
@@ -383,19 +389,7 @@ const Dashboard = ({
 
         <div className="header-main">
           <div className="hero-copy">
-            <p className="eyebrow">CampusStay Student Portal</p>
-            <h1>{timeGreeting}, {displayName}</h1>
-            <p className="time-note">
-              Welcome back, {displayName}. You are signed in for the {campusName} campus.
-            </p>
-            <p className="subheading">
-              Manage your room application, submit payment details, and track admin decisions from one portal.
-            </p>
-            <p className="header-user-subtitle">Signed in as {displayName}</p>
-            <p className="time-note">Local time: {currentTimeLabel}</p>
-            <div className="campus-intro">
-              <span className="campus-label">{campusName}</span>
-            </div>
+            <h1 className="greeting-title">{timeGreeting}, {displayName}</h1>
           </div>
         </div>
       </header>
@@ -745,6 +739,7 @@ const Dashboard = ({
                         {latestApplication?.status === 'rejected' && (
                           <div className="hero-alert warning">
                             <p>Your last application was rejected. You can submit a corrected request now.</p>
+                            <small>See the admin reason below before you re-apply.</small>
                           </div>
                         )}
                       </Paper>
@@ -844,6 +839,12 @@ const Dashboard = ({
                                 <span>Payment review</span>
                                 <strong>{PAYMENT_STATUS_LABELS[paymentStatus]}</strong>
                               </div>
+                              {latestApplication.status === 'rejected' && (
+                                <div>
+                                  <span>Rejection reason</span>
+                                  <strong>{rejectionReason || 'Reason not provided yet'}</strong>
+                                </div>
+                              )}
                               <div>
                                 <span>Admin update access</span>
                                 <strong>{latestApplication.allowAdminUpdates ? 'Allowed' : 'Not allowed'}</strong>
@@ -976,10 +977,11 @@ const ApplicationForm = ({ student, onBack, onSubmit }) => {
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
+    const nextValue = name === 'phone' ? normalizePhoneNumberInput(value) : value;
 
     setFormData((currentFormData) => ({
       ...currentFormData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? checked : nextValue,
       amountPaid:
         name === 'roomType'
           ? String(HOSTEL_RENT_BY_ROOM_TYPE[value] ?? currentFormData.amountPaid)
@@ -1013,6 +1015,11 @@ const ApplicationForm = ({ student, onBack, onSubmit }) => {
 
     if (!formData.paymentMethod || !formData.paymentReference.trim()) {
       setFormMessage('Payment method and transaction reference are required.');
+      return;
+    }
+
+    if (!/^\+\d{1,12}$/.test(formData.phone)) {
+      setFormMessage('Phone number must start with + and contain up to 12 digits, for example +250788445512.');
       return;
     }
 
@@ -1088,7 +1095,19 @@ const ApplicationForm = ({ student, onBack, onSubmit }) => {
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="phone">Phone Number</label>
-            <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required />
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              inputMode="tel"
+              autoComplete="tel"
+              maxLength={13}
+              placeholder="+250788445512"
+              required
+            />
+            <small className="field-hint">Use + followed by up to 12 digits. No letters.</small>
           </div>
           <div className="form-group">
             <label htmlFor="roomType">Preferred Room Type</label>

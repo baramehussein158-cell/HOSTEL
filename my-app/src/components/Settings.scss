@@ -248,6 +248,14 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
+        }
+
+        .field-hint {
+          margin: 0;
+          font-size: 0.82rem;
+          line-height: 1.4;
+          opacity: 0.72;
+        }
       }
 
         &.checkbox-group {

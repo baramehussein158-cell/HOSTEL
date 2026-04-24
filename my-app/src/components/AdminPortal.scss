@@ -1264,6 +1264,21 @@
   resize: vertical;
 }
 
+.rejection-reason-field {
+  margin-top: 0.1rem;
+}
+
+.rejection-reason-note {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.18);
+  color: inherit;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .payment-actions {
   padding-top: 0.1rem;
 }
@@ -1928,10 +1943,10 @@
 }
 
 .admin-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1rem;
-  align-items: stretch;
+  display: flex;
+  align-items: center;
+  min-height: clamp(6rem, 11vw, 8rem);
+  padding: 0.2rem 0 0.5rem;
 }
 
 .admin-hero h1 {
@@ -1939,18 +1954,6 @@
   font-size: clamp(2rem, 4vw, 2.9rem);
   line-height: 1.08;
   color: #10233d;
-}
-
-.admin-copy {
-  max-width: 760px;
-  color: #5b6b81;
-}
-
-.time-note {
-  margin: 0.15rem 0 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #5b6476;
 }
 
 .admin-layout-with-sidebar {

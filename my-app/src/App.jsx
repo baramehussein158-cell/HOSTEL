@@ -45,6 +45,7 @@ import './App.scss';
 
 const APPLICATION_DEADLINE = new Date('2026-05-15T23:59:59');
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+const STUDENT_PHONE_POLICY = /^\+\d{1,12}$/;
 
 const getLatestApplicationForStudent = (applications, student) => {
   if (!student) {
@@ -587,6 +588,7 @@ function AppContent() {
 
     const expectedRentAmount = HOSTEL_RENT_BY_ROOM_TYPE[data.roomType];
     const amountPaid = Number(data.amountPaid);
+    const nextPhone = data.phone?.trim() ?? '';
     const accountKey = getUserAccountKey(activeStudent);
     const relatedUserIds = users
       .filter((user) => getUserAccountKey(user) === accountKey)
@@ -600,6 +602,13 @@ function AppContent() {
       return {
         success: false,
         message: 'The full hostel rent must be entered before your application can be submitted.',
+      };
+    }
+
+    if (!STUDENT_PHONE_POLICY.test(nextPhone)) {
+      return {
+        success: false,
+        message: 'Phone number must start with + and contain up to 12 digits, for example +250788445512.',
       };
     }
 
@@ -622,7 +631,7 @@ function AppContent() {
         gender: data.gender,
         allowAdminUpdates: Boolean(data.allowAdminUpdates),
         studyCampus: data.studyCampus,
-        phone: data.phone,
+        phone: nextPhone,
         roomType: data.roomType,
         paymentMethod: data.paymentMethod,
         paymentReference: data.paymentReference,
@@ -936,6 +945,13 @@ function AppContent() {
       return { success: false, message: 'Name, email, and gender are required.' };
     }
 
+    if (nextPhone && !STUDENT_PHONE_POLICY.test(nextPhone)) {
+      return {
+        success: false,
+        message: 'Phone number must start with + and contain up to 12 digits, for example +250788445512.',
+      };
+    }
+
     const duplicateEmail = users.some(
       (existingUser) =>
         existingUser.id !== activeStudent.id &&
@@ -1148,6 +1164,7 @@ function AppContent() {
     const nextStatus = updates.status ?? application.status;
     const currentPaymentStatus = application.paymentStatus ?? 'pending';
     const nextPaymentStatus = updates.paymentStatus ?? currentPaymentStatus;
+    const nextRejectionReason = String(updates.rejectionReason ?? application.rejectionReason ?? '').trim();
     const relatedRoom = roomInventory.find(
       (room) => room.campus === application.campus && room.typeKey === application.roomType
     );
@@ -1181,6 +1198,13 @@ function AppContent() {
       }
     }
 
+    if (nextStatus === 'rejected' && !nextRejectionReason) {
+      return {
+        success: false,
+        message: 'Add a rejection reason before rejecting the application.',
+      };
+    }
+
     if (application.status === 'approved' && nextPaymentStatus !== 'verified') {
       return {
         success: false,
@@ -1196,6 +1220,7 @@ function AppContent() {
         reviewedAt: nextStatus === 'pending' ? '' : new Date().toISOString(),
         paymentStatus: nextPaymentStatus,
         paymentVerificationNotes: updates.paymentVerificationNotes ?? application.paymentVerificationNotes ?? '',
+        rejectionReason: nextStatus === 'rejected' ? nextRejectionReason : '',
       };
 
       if (paymentStatusChanged) {
@@ -1210,6 +1235,10 @@ function AppContent() {
       if (updates.paymentStatus && updates.paymentStatus !== currentPaymentStatus) {
         const paymentLabel = updates.paymentStatus === 'verified' ? 'verified' : 'marked for follow-up';
         return { success: true, message: `Payment ${paymentLabel} for ${application.name}.` };
+      }
+
+      if (nextStatus === 'rejected') {
+        return { success: true, message: `Application for ${application.name} was rejected and the reason was saved.` };
       }
 
       return { success: true, message: `Application moved to ${nextStatus}.` };

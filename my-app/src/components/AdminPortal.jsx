@@ -36,7 +36,7 @@ import {
   sortApplicationsByDate,
 } from '../data/portalData';
 import { PORTAL_IMAGES } from '../data/siteImages';
-import { getDisplayName, getInitials, getLocalTimeLabel, getTimeGreeting } from '../utils/display';
+import { getDisplayName, getInitials, getTimeGreeting } from '../utils/display';
 import CampusCarousel from './CampusCarousel';
 import HighlightText from './HighlightText';
 import DashboardSidebar from './DashboardSidebar';
@@ -81,6 +81,7 @@ const AdminPortal = ({
   const [roomDrafts, setRoomDrafts] = useState({});
   const [assignmentDrafts, setAssignmentDrafts] = useState({});
   const [paymentNotesDrafts, setPaymentNotesDrafts] = useState({});
+  const [rejectionReasonDrafts, setRejectionReasonDrafts] = useState({});
   const [selectedStudentDraft, setSelectedStudentDraft] = useState({
     name: '',
     email: '',
@@ -104,7 +105,6 @@ const AdminPortal = ({
     session?.profileImageUpdatedAt || adminProfile?.profileImageUpdatedAt
   );
   const timeGreeting = getTimeGreeting();
-  const currentTimeLabel = getLocalTimeLabel();
   const searchQuery = studentSearch.trim().toLowerCase();
   const selectedCampusLabel =
     campusFilter === 'UR' ? 'University of Rwanda' : campusFilter === 'RP' ? 'Rwanda Polytechnic' : 'All campuses';
@@ -153,6 +153,13 @@ const AdminPortal = ({
     setPaymentNotesDrafts(
       applications.reduce((drafts, application) => {
         drafts[application.id] = application.paymentVerificationNotes ?? '';
+        return drafts;
+      }, {})
+    );
+
+    setRejectionReasonDrafts(
+      applications.reduce((drafts, application) => {
+        drafts[application.id] = application.rejectionReason ?? '';
         return drafts;
       }, {})
     );
@@ -618,11 +625,19 @@ const AdminPortal = ({
   };
 
   const handleApplicantAction = async (applicationId, status) => {
+    const rejectionReason = rejectionReasonDrafts[applicationId]?.trim() ?? '';
+
+    if (status === 'rejected' && !rejectionReason) {
+      showFlash({ success: false, message: 'Add a rejection reason before rejecting the application.' });
+      return;
+    }
+
     setIsSaving(true);
     const result = await onUpdateApplication(applicationId, {
       status,
       assignedRoom: assignmentDrafts[applicationId]?.trim() ?? '',
       paymentVerificationNotes: paymentNotesDrafts[applicationId]?.trim() ?? '',
+      rejectionReason,
     });
     setIsSaving(false);
     showFlash(result);
@@ -776,18 +791,7 @@ const AdminPortal = ({
 
         <div className="admin-hero">
           <div>
-            <p className="eyebrow">Admin Monitor</p>
-            <h1>{timeGreeting}, {displayedAdminName}</h1>
-            <p className="time-note">
-              Welcome back, {displayedAdminName}. You are managing {selectedCampusLabel}.
-            </p>
-            <p className="admin-copy">
-              Monitor registrations, verify hostel rent payments, approve qualified students, and support account
-              recovery from one place.
-            </p>
-            <p className="time-note">
-              Local time: {currentTimeLabel} | Campus scope: {selectedCampusLabel}
-            </p>
+            <h1 className="greeting-title">{timeGreeting}, {displayedAdminName}</h1>
           </div>
         </div>
       </header>
@@ -1575,6 +1579,20 @@ const AdminPortal = ({
                           }
                         />
 
+                        <textarea
+                          className="notes-field rejection-reason-field"
+                          rows="3"
+                          placeholder="Rejection reason (required if you reject)"
+                          value={rejectionReasonDrafts[application.id] ?? ''}
+                          disabled={isSaving}
+                          onChange={(event) =>
+                            setRejectionReasonDrafts((currentDrafts) => ({
+                              ...currentDrafts,
+                              [application.id]: event.target.value,
+                            }))
+                          }
+                        />
+
                         <div className="application-actions payment-actions">
                           <button
                             type="button"
@@ -1593,6 +1611,12 @@ const AdminPortal = ({
                             Reject Payment
                           </button>
                         </div>
+
+                        {application.status === 'rejected' && application.rejectionReason && (
+                          <div className="rejection-reason-note">
+                            <strong>Rejection reason:</strong> {application.rejectionReason}
+                          </div>
+                        )}
 
                         <div className="application-actions">
                           <button
