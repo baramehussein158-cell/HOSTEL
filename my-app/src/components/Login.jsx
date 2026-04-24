@@ -27,7 +27,7 @@ const Login = ({
   const { theme } = useTheme();
   const [mode, setMode] = useState(isAdminMode ? 'admin' : 'login');
   const [loginData, setLoginData] = useState({ email: '', password: '', regNumber: '', campus: '', gender: '' });
-  const modeOptions = isAdminMode ? ['admin', 'reset'] : ['login', 'register', 'reset'];
+  const modeOptions = isAdminMode ? ['admin'] : ['login', 'register', 'reset'];
   const [adminData, setAdminData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
     name: '',
@@ -386,7 +386,7 @@ const Login = ({
                 <FaArrowLeft /> Back to portal selection
               </button>
             )}
-            <div className="login-nav four-column">
+            <div className={`login-nav ${modeOptions.length > 1 ? 'four-column' : ''}`.trim()}>
               {modeOptions.map((option) => {
                 const label =
                   option === 'login'
@@ -1001,20 +1001,6 @@ const Login = ({
                   }}
                 >
                   Back to login
-                </button>
-              </p>
-            )}
-            {mode === 'admin' && (
-              <p>
-                Need help from the reset tab?{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode('reset');
-                    resetFeedback();
-                  }}
-                >
-                  Open reset password
                 </button>
               </p>
             )}
